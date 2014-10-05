@@ -1773,7 +1773,7 @@ begin
     GeneralPurposeBitFlag := 0;
     CompressedSize := 0;
     CRC32 := 0;
-    DiskFileName := ExpandFileName(FileSpec);
+    DiskFileName := ExpandFileName(AbAddBackSlash(BaseDirectory) + FileSpec);
     FileName := FixName(FileSpec);
     RelativeOffset := 0;
   end;

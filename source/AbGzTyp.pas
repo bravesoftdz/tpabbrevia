@@ -1092,7 +1092,6 @@ var
   i                   : Integer;
   NewStream           : TAbVirtualMemoryStream;
   UncompressedStream  : TStream;
-  SaveDir             : string;
   CurItem             : TAbGzipItem;
 begin
   {prepare for the try..finally}
@@ -1157,17 +1156,10 @@ begin
                   OutGzHelp.WriteArchiveTail;
                 end
                 else begin
-                { it's coming from a file }
-                  GetDir(0, SaveDir);
-                  try {SaveDir}
-                    if (BaseDirectory <> '') then
-                      ChDir(BaseDirectory);
-                    CurItem.LastModTimeAsDateTime := AbGetFileTime(CurItem.DiskFileName);
-                    UncompressedStream := TFileStream.Create(CurItem.DiskFileName,
-                      fmOpenRead or fmShareDenyWrite );
-                  finally {SaveDir}
-                    ChDir( SaveDir );
-                  end; {SaveDir}
+                  { it's coming from a file }
+                  CurItem.LastModTimeAsDateTime := AbGetFileTime(CurItem.DiskFileName);
+                  UncompressedStream := TFileStream.Create(CurItem.DiskFileName,
+                    fmOpenRead or fmShareDenyWrite );
 
                   try
                     CurItem.UncompressedSize := UncompressedStream.Size;

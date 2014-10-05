@@ -2099,7 +2099,6 @@ var
   i              : Integer;
   NewStream      : TAbVirtualMemoryStream;
   TempStream     : TStream;
-  SaveDir        : string;
   CurItem        : TAbTarItem;
   AttrEx         : TAbAttrExRec;
 begin
@@ -2148,37 +2147,30 @@ begin
         aaAdd, aaFreshen, aaReplace: begin
           try
             { it's coming from a file }
-            GetDir(0, SaveDir);
-            try {SaveDir}
-              if (BaseDirectory <> '') then
-                ChDir(BaseDirectory);
-              { update metadata }
-              if not AbFileGetAttrEx(CurItem.DiskFileName, AttrEx) then
-                raise EAbFileNotFound.Create;
-              CurItem.ExternalFileAttributes := AttrEx.Mode;
-              CurItem.LastModTimeAsDateTime := AttrEx.Time;
-              { TODO: uid, gid, uname, gname should be added here }
-              { TODO: Add support for different types of files here }
-              if (AttrEx.Mode and AB_FMODE_DIR) <> 0 then begin
-                CurItem.LinkFlag := AB_TAR_LF_DIR;
-                CurItem.UncompressedSize := 0;
+            { update metadata }
+            if not AbFileGetAttrEx(CurItem.DiskFileName, AttrEx) then
+              raise EAbFileNotFound.Create;
+            CurItem.ExternalFileAttributes := AttrEx.Mode;
+            CurItem.LastModTimeAsDateTime := AttrEx.Time;
+            { TODO: uid, gid, uname, gname should be added here }
+            { TODO: Add support for different types of files here }
+            if (AttrEx.Mode and AB_FMODE_DIR) <> 0 then begin
+              CurItem.LinkFlag := AB_TAR_LF_DIR;
+              CurItem.UncompressedSize := 0;
+              CurItem.SaveTarHeaderToStream(NewStream);
+            end
+            else begin
+              TempStream := TFileStream.Create(CurItem.DiskFileName,
+                fmOpenRead or fmShareDenyWrite );
+              try { TempStream }
+                CurItem.UncompressedSize := TempStream.Size;
+                CurItem.StreamPosition := NewStream.Position;{ Reset the Stream Pointer. }
                 CurItem.SaveTarHeaderToStream(NewStream);
-              end
-              else begin
-                TempStream := TFileStream.Create(CurItem.DiskFileName,
-                  fmOpenRead or fmShareDenyWrite );
-                try { TempStream }
-                  CurItem.UncompressedSize := TempStream.Size;
-                  CurItem.StreamPosition := NewStream.Position;{ Reset the Stream Pointer. }
-                  CurItem.SaveTarHeaderToStream(NewStream);
-                  OutTarHelp.WriteArchiveItemSize(TempStream, TempStream.Size);
-                finally { TempStream }
-                  TempStream.Free;
-                end; { TempStream }
-              end;
-            finally {SaveDir}
-              ChDir( SaveDir );
-            end; {SaveDir}
+                OutTarHelp.WriteArchiveItemSize(TempStream, TempStream.Size);
+              finally { TempStream }
+                TempStream.Free;
+              end; { TempStream }
+            end;
           except
             ItemList[i].Action := aaDelete;
             DoProcessItemFailure(ItemList[i], ptAdd, ecFileOpenError, 0);

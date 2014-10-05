@@ -215,10 +215,10 @@ type
   function AbFileMatch(FileName : string; FileMask : string ) : Boolean;
     {see if FileName matches FileMask}
 
-  procedure AbFindFiles(const FileMask : string; SearchAttr : Integer;
+  procedure AbFindFiles(const BasePath, FileMask : string; SearchAttr : Integer;
                          FileList : TStrings; Recurse : Boolean );
 
-  procedure AbFindFilesEx( const FileMask : string; SearchAttr : Integer;
+  procedure AbFindFilesEx( const BasePath, FileMask : string; SearchAttr : Integer;
                          FileList : TStrings; Recurse : Boolean );
 
   function AbAddBackSlash(const DirName : string) : string;
@@ -612,7 +612,7 @@ begin
                                        ExtractFileName( FileMask ), 1 );
 end;
 { -------------------------------------------------------------------------- }
-procedure AbFindFiles( const FileMask : string; SearchAttr : Integer;
+procedure AbFindFiles( const BasePath, FileMask : string; SearchAttr : Integer;
                        FileList : TStrings; Recurse : Boolean );
 var
   NewFile : string;
@@ -620,7 +620,7 @@ var
   Found : Integer;
   NameMask: string;
 begin
-  Found := FindFirst( FileMask, SearchAttr, SR );
+  Found := FindFirst( AbAddBackSlash(BasePath) + FileMask, SearchAttr, SR );
   if Found = 0 then begin
     try
       NameMask := UpperCase(ExtractFileName(FileMask));
@@ -646,14 +646,14 @@ begin
     NewFile := NewFile + AbPathDelim;
   NewFile := NewFile + AbAnyFile;
 
-  Found := FindFirst( NewFile, faDirectory or SearchAttr, SR );
+  Found := FindFirst( AbAddBackSlash(BasePath) + NewFile, faDirectory or SearchAttr, SR );
   if Found = 0 then begin
     try
       while ( Found = 0 ) do begin
         if ( SR.Name <> AbThisDir ) and
            ( SR.Name <> AbParentDir ) and
            ((SR.Attr and faDirectory) > 0 ) then
-          AbFindFiles( ExtractFilePath( NewFile ) + SR.Name + AbPathDelim +
+          AbFindFiles( BasePath, ExtractFilePath( NewFile ) + SR.Name + AbPathDelim +
                        ExtractFileName( FileMask ), SearchAttr,
                        FileList, True );
         Found := FindNext( SR );
@@ -664,7 +664,7 @@ begin
   end;
 end;
 { -------------------------------------------------------------------------- }
-procedure AbFindFilesEx( const FileMask : string; SearchAttr : Integer;
+procedure AbFindFilesEx( const BasePath, FileMask : string; SearchAttr : Integer;
                        FileList : TStrings; Recurse : Boolean );
 var
   I, J: Integer;
@@ -677,7 +677,7 @@ begin
     MaskPart := Trim(Copy(FileMask, J, I - J));
     if (I <= Length(FileMask)) and (FileMask[I] = AbPathSep) then Inc(I);
 
-    AbFindFiles(MaskPart, SearchAttr, FileList, Recurse);
+    AbFindFiles(BasePath, MaskPart, SearchAttr, FileList, Recurse);
   end;
 end;
 { -------------------------------------------------------------------------- }

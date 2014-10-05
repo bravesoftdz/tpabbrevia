@@ -1071,7 +1071,6 @@ procedure TAbArchive.AddFilesEx(const FileMask, ExclusionMask : string;
 var
   PathType : TAbPathType;
   IsWild : Boolean;
-  SaveDir : string;
   Mask : string;
   MaskF : string;
 
@@ -1085,12 +1084,12 @@ var
     FilterList := TStringList.Create;
     try
       if (MaskF <> '') then
-        AbFindFilesEx(MaskF, SearchAttr, FilterList, Recursing);
+        AbFindFilesEx(BaseDirectory, MaskF, SearchAttr, FilterList, Recursing);
 
         Files := TStringList.Create;
         try
 
-          AbFindFilesEx(Mask, SearchAttr, Files, Recursing);
+          AbFindFilesEx(BaseDirectory, Mask, SearchAttr, Files, Recursing);
           if (Files.Count > 0) then
             for i := 0 to pred(Files.Count) do
               if FilterList.IndexOf(Files[i]) < 0 then
@@ -1131,15 +1130,7 @@ begin
   case PathType of
     ptNone, ptRelative :
       begin
-        GetDir(0, SaveDir);
-        if BaseDirectory <> '' then
-          ChDir(BaseDirectory);
-        try
-          CreateItems(IsWild, soRecurse in StoreOptions);
-        finally
-          if BaseDirectory <> '' then
-            ChDir(SaveDir);
-        end;
+        CreateItems(IsWild, soRecurse in StoreOptions);
       end;
     ptAbsolute :
       begin
@@ -1657,28 +1648,19 @@ var
   FileTime : Word;
   FileDate : Word;
   Matched : Boolean;
-  SaveDir : string;
 begin
-  GetDir(0, SaveDir);
-  if BaseDirectory <> '' then
-    ChDir(BaseDirectory);
+  FS := TFileStream.Create(Item.DiskFileName,
+                            fmOpenRead or fmShareDenyWrite);
   try
-    FS := TFileStream.Create(Item.DiskFileName,
-                              fmOpenRead or fmShareDenyWrite);
-    try
-      DateTime := FileGetDate(FS.Handle);
-      FileTime := LongRec(DateTime).Lo;
-      FileDate := LongRec(DateTime).Hi;
-      Matched := (Item.LastModFileDate = FileDate) and
-                 (Item.LastModFileTime = FileTime) and
-                 (Item.UncompressedSize = FS.Size);
-      Result := not Matched;
-    finally
-      FS.Free;
-    end;
+    DateTime := FileGetDate(FS.Handle);
+    FileTime := LongRec(DateTime).Lo;
+    FileDate := LongRec(DateTime).Hi;
+    Matched := (Item.LastModFileDate = FileDate) and
+               (Item.LastModFileTime = FileTime) and
+               (Item.UncompressedSize = FS.Size);
+    Result := not Matched;
   finally
-    if BaseDirectory <> '' then
-      ChDir(SaveDir);
+    FS.Free;
   end;
 end;
 { -------------------------------------------------------------------------- }
@@ -1701,35 +1683,26 @@ procedure TAbArchive.GetFreshenTarget(Item : TAbArchiveItem);
 var
   PathType : TAbPathType;
   Files : TStrings;
-  SaveDir : string;
   DName : string;
 begin
   PathType := AbGetPathType(Item.DiskFileName);
   if (soRecurse in StoreOptions) and (PathType = ptNone) then begin
-    GetDir(0, SaveDir);
-    if BaseDirectory <> '' then
-      ChDir(BaseDirectory);
+    Files := TStringList.Create;
     try
-      Files := TStringList.Create;
-      try
-        // even if archive supports empty folder we don't have to
-        // freshen it because there is no data, although, the timestamp
-        // can be update since the folder was added
-        AbFindFiles(Item.FileName, faAnyFile and not faDirectory, Files,
-                     True);
-        if Files.Count > 0 then begin
-          DName := AbAddBackSlash(BaseDirectory) + Files[0];
-          AbUnfixName(DName);
-          Item.DiskFileName := DName;
-        end
-        else
-          Item.DiskFileName := '';
-      finally
-        Files.Free;
-      end;
+      // even if archive supports empty folder we don't have to
+      // freshen it because there is no data, although, the timestamp
+      // can be update since the folder was added
+      AbFindFiles(BaseDirectory, Item.FileName, faAnyFile and not faDirectory, Files,
+                   True);
+      if Files.Count > 0 then begin
+        DName := AbAddBackSlash(BaseDirectory) + Files[0];
+        AbUnfixName(DName);
+        Item.DiskFileName := DName;
+      end
+      else
+        Item.DiskFileName := '';
     finally
-      if BaseDirectory <> '' then
-        ChDir(SaveDir);
+      Files.Free;
     end;
   end
   else begin
