@@ -1886,7 +1886,7 @@ begin
     Item.CRC32 := 0;
     { Note this can raise exceptions for file name lengths. }
     Item.FileName := FixName(FileSpec);
-    Item.DiskFileName := ExpandFileName(FileSpec);
+    Item.DiskFileName := ExpandFileName(AbAddBackSlash(BaseDirectory) + FileSpec);
     Item.Action := aaNone;
   finally
     Result := Item;

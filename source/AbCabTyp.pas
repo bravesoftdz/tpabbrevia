@@ -647,7 +647,7 @@ begin
   Result := TAbCabItem.Create;
   with TAbCabItem(Result) do begin
     CompressedSize := 0;
-    DiskFileName := ExpandFileName(FileSpec);
+    DiskFileName := ExpandFileName(AbAddBackSlash(BaseDirectory) + FileSpec);
     FileName := FixName(FileSpec);
   end;
 end;

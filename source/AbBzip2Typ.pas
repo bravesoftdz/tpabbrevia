@@ -203,7 +203,7 @@ begin
     SwapToBzip2;
     Result := TAbBzip2Item.Create;
     try
-      Result.DiskFileName := ExpandFileName(FileSpec);
+      Result.DiskFileName := ExpandFileName(AbAddBackSlash(BaseDirectory) + FileSpec);
       Result.FileName := FixName(FileSpec);
     except
       Result.Free;

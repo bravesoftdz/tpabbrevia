@@ -902,7 +902,7 @@ begin
     try
       GzItem.CompressedSize := 0;
       GzItem.CRC32 := 0;
-      GzItem.DiskFileName := ExpandFileName(FileSpec);
+      GzItem.DiskFileName := ExpandFileName(AbAddBackSlash(BaseDirectory) + FileSpec);
       GzItem.FileName := FixName(FileSpec);
       Result := GzItem;
     except
