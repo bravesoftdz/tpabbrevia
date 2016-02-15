@@ -62,7 +62,7 @@ type
       FAdvanceStart : boolean;
       FBuffer       : PAnsiChar;
       FBufferEnd    : PAnsiChar;
-      FBytesUsed    : longint;
+      FBytesUsed    : Int64;
       FChainLen     : integer;
       FHashChains   : PAbPointerList;
       FHashHeads    : PAbPointerList;
