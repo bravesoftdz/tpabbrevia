@@ -75,7 +75,7 @@ type
       FOnProgress   : TAbProgressStep;
       FSlidePoint   : PAnsiChar;
       FStart        : PAnsiChar;
-      FStartOffset  : longint;
+      FStartOffset  : Int64;
       FStream       : TStream;
       FStreamSize   : Int64;
       FUseCRC32     : boolean;
@@ -104,7 +104,7 @@ type
                           const aPrevMatch   : TAbDfMatch) : boolean;
       function GetNextChar : AnsiChar;
       function GetNextKeyLength : integer;
-      function Position : longint;
+      function Position : Int64;
       procedure ReadBuffer(var aBuffer; aCount  : longint;
                                         aOffset : Int64);
 
@@ -741,7 +741,7 @@ begin
   iwReadFromStream;
 end;
 {--------}
-function TAbDfInputWindow.Position : longint;
+function TAbDfInputWindow.Position : Int64;
 begin
   Result := (FCurrent - FStart) + FStartOffset;
 end;
